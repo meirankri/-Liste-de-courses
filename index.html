@@ -275,7 +275,7 @@ function render(){
   const mag=ui.store, q=$("q").hidden?"":norm($("q").value);
   const c=counts(mag);
   $("hint").innerHTML=ui.mode==="prep"?"Touche un article pour le cocher, puis ajuste le nombre avec − et +."
-    :ui.mode==="edit"?"Ajoute une précision, ajoute un article ou masque ce que tu n'achètes pas. Rien n'est effacé : les articles masqués restent en bas de la page."
+    :ui.mode==="edit"?"Ajoute une précision, ajoute un article (il est mis directement sur ta liste) ou masque ce que tu n'achètes pas. Rien n'est effacé : les articles masqués restent en bas de la page."
     :(c.need?`${c.got} sur ${c.need} dans le caddie<div class="progress"><i style="width:${100*c.got/c.need}%"></i></div>`:"");
   let html="";const hidden=[];
   for(const ray of rayons(mag)){
@@ -346,9 +346,10 @@ function addItem(rayEnc){
   let name=(input&&input.value||"").trim().replace(/\s+/g," ");if(!name)return;
   name=name.charAt(0).toUpperCase()+name.slice(1);
   const same=R.filter(r=>r.mag===mag&&r.rayon===ray), dup=same.find(r=>norm(r.art)===norm(name));
-  if(dup){dup.masque=false;push({op:"ajout",mag,rayon:ray,art:dup.art})}
-  else{const last=same[same.length-1];const nr={mag,rayon:ray,art:name,prec:"",masque:false,qte:0,pris:false,ajout:true};
-    R.splice(last?R.indexOf(last)+1:R.length,0,nr);push({op:"ajout",mag,rayon:ray,art:name})}
+  // un article ajouté va directement sur la liste (quantité 1)
+  if(dup){dup.masque=false;push({op:"ajout",mag,rayon:ray,art:dup.art});if(!dup.qte){dup.qte=1;dup.pris=false;maj(dup,{qte:1,pris:false})}}
+  else{const last=same[same.length-1];const nr={mag,rayon:ray,art:name,prec:"",masque:false,qte:1,pris:false,ajout:true};
+    R.splice(last?R.indexOf(last)+1:R.length,0,nr);push({op:"ajout",mag,rayon:ray,art:name});maj(nr,{qte:1})}
   render();
   const again=document.querySelector(`[data-addin="${rayEnc}"]`);if(again)again.focus();
 }
